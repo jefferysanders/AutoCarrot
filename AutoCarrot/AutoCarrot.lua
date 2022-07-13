@@ -10,7 +10,7 @@ f:RegisterEvent('BAG_UPDATE')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_EQUIPMENT_CHANGED')
 f:SetScript("OnUpdate", function()
-    if(not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
+    if(not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
     if(IsMounted() and not UnitOnTaxi("player")) then
         local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
         if(itemId) then
