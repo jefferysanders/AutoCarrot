@@ -174,6 +174,8 @@ f:SetScript('OnEvent', function(self, event, ...)
             AutoCarrotDB.trinketSlot1 = false
             AutoCarrotDB.enchantHandsLink = nil
             AutoCarrotDB.enchantBootsLink = nil
+            AutoCarrotDB.handsLink = nil
+            AutoCarrotDB.bootsLink = nil
             return
         elseif(itemId == 11122) then
             CROP_OR_CARROT_ID = 11122
@@ -188,6 +190,8 @@ f:SetScript('OnEvent', function(self, event, ...)
                         CROP_OR_CARROT_ID = tonumber(sItemId)
                         AutoCarrotDB.enchantHandsLink = nil
                         AutoCarrotDB.enchantBootsLink = nil
+                        AutoCarrotDB.handsLink = nil
+                        AutoCarrotDB.bootsLink = nil
                         return
                     elseif(sItemId == "11122") then
                         CROP_OR_CARROT_ID = 11122
