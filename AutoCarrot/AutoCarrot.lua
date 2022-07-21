@@ -3,14 +3,16 @@ if not AutoCarrotDB then
 end
 
 local CROP_OR_CARROT_ID = nil
+local hasEnteredWorld = false
 
 local f = CreateFrame("Frame")
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
+f:RegisterEvent('PLAYER_LEAVING_WORLD')
 f:RegisterEvent('BAG_UPDATE')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_EQUIPMENT_CHANGED')
 f:SetScript("OnUpdate", function()
-    if(not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
+    if(not hasEnteredWorld or not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
     if(IsMounted() and not UnitOnTaxi("player")) then
         local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
         if(itemId) then
@@ -155,7 +157,10 @@ f:SetScript('OnEvent', function(self, event, ...)
     	if(addon == 'AutoCarrot') then
         	AutoCarrot_OnLoad()
         end
+    elseif(event == 'PLAYER_LEAVING_WORLD') then
+        hasEnteredWorld = false
     else
+        hasEnteredWorld = true
         CROP_OR_CARROT_ID = nil
         local itemId = GetInventoryItemID("player", 13)
         if(itemId == 25653 or itemId == 32863) then
