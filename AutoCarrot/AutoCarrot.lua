@@ -1,5 +1,5 @@
 if not AutoCarrotDB then
-    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, button = false, buttonScale = 1.0, trinketSlot1 = false }
+    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, button = false, buttonScale = 1.0, trinketSlot1 = false, instance = false }
 end
 
 local CROP_OR_CARROT_ID = nil
@@ -153,13 +153,25 @@ f:SetScript("OnUpdate", function()
 end)
 f:SetScript('OnEvent', function(self, event, ...)
     if(event == 'ADDON_LOADED') then 
-    	local addon = ...
-    	if(addon == 'AutoCarrot') then
-        	AutoCarrot_OnLoad()
+        local addon = ...
+        if(addon == 'AutoCarrot') then
+            AutoCarrot_OnLoad()
         end
     elseif(event == 'PLAYER_LEAVING_WORLD') then
         hasEnteredWorld = false
-    else
+    else -- PLAYER_ENTERING_WORLD / BAG_UPDATE / PLAYER_EQUIPMENT_CHANGED
+        if(event == 'PLAYER_ENTERING_WORLD' and AutoCarrotDB.instance) then
+            if (IsInInstance()) then
+                if (AutoCarrotDB.enabled) then
+                    AutoCarrotButton:Click()
+                    AutoCarrotDB.wasAutoDisabled = true
+                end
+            else
+                if (not AutoCarrotDB.enabled and AutoCarrotDB.wasAutoDisabled) then
+                    AutoCarrotButton:Click()
+                end
+            end
+        end
         hasEnteredWorld = true
         CROP_OR_CARROT_ID = nil
         local itemId = GetInventoryItemID("player", 13)
@@ -233,7 +245,7 @@ end
 
 -- Print handler
 function AutoCarrot_Print(msg)
-	print("|cff00ff00Auto|cffed9121Carrot|r: "..(msg or ""))
+    print("|cff00ff00Auto|cffed9121Carrot|r: "..(msg or ""))
 end
 
 function AutoCarrot_OnLoad()
@@ -256,16 +268,12 @@ local function OnSlash(key, value, ...)
     if key and key ~= "" then
         if key == "enabled" then
             if value == "toggle" or tonumber(value) then
-                local enable
                 if value == "toggle" then
-                    enable = not AutoCarrotDB.enabled
-                else
-                    enable = tonumber(value) == 1 and true or false
+                    AutoCarrotButton:Click()
+                elseif AutoCarrotDB.enabled ~= (tonumber(value) == 1 and true or false) then
+                    AutoCarrotButton:Click()
                 end
-                AutoCarrotDB.enabled = enable
-                AutoCarrot_Print("'enabled' set: "..( enable and "1" or "0" ))
-                if not enable then AutoCarrot_EquipNormalSet() end
-                AutoCarrot_OnLoad()
+                AutoCarrot_Print("'enabled' set: "..( AutoCarrotDB.enabled and "1" or "0" ))
             else
                 AutoCarrot_Print("'enabled' = "..( AutoCarrotDB.enabled and "1" or "0" ))
             end
@@ -302,6 +310,14 @@ local function OnSlash(key, value, ...)
             else
                 AutoCarrot_Print("'swimHelm' = "..( AutoCarrotDB.swimHelm and "1" or "0" ))
             end
+        elseif key == "instance" then
+            if tonumber(value) then
+                local enable = tonumber(value) == 1 and true or false
+                AutoCarrotDB.swimHelm = enable
+                AutoCarrot_Print("'instance' set: "..( enable and "1" or "0" ))
+            else
+                AutoCarrot_Print("'instance' = "..( AutoCarrotDB.instance and "1" or "0" ))
+            end
         elseif key == "button" then
             if tonumber(value) then
                 local enable = tonumber(value) == 1 and true or false
@@ -335,6 +351,7 @@ local function OnSlash(key, value, ...)
         AutoCarrot_Print(" - mithrilSpurs 0/1 ("..(AutoCarrotDB.mithrilSpurs and "1" or "0")..")")
         AutoCarrot_Print(" - swimBelt 0/1 ("..(AutoCarrotDB.swimBelt and "1" or "0")..")")
         AutoCarrot_Print(" - swimHelm 0/1 ("..(AutoCarrotDB.swimHelm and "1" or "0")..")")
+        AutoCarrot_Print(" - instance 0/1 ("..(AutoCarrotDB.instance and "1" or "0")..")")
         AutoCarrot_Print(" - button 0/1/reset/scale ("..(AutoCarrotDB.button and "1" or "0")..")")
     end
 end
@@ -369,4 +386,5 @@ AutoCarrotButton:SetScript("OnClick", function()
         AutoCarrotButton.overlay:SetColorTexture(0, 1, 0, 0.3)
         AutoCarrotDB.enabled = true
     end
+    AutoCarrotDB.wasAutoDisabled = false
 end)
