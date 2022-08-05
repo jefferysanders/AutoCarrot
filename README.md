@@ -17,7 +17,6 @@ UPDATE:
 
 2022-08-06 v3.0:
 - WOTLK Update (disable carrot/crop on level 70+)
-- Add Hydrocane for auto breath regen
 - Add option to auto disable on instances/raids/battlegrounds/arenas
 
 Usage:  
@@ -27,6 +26,5 @@ Usage:
 /ac mithrilSpurs 0/1  
 /ac swimBelt 0/1  
 /ac swimHelm 0/1  
-/ac swimCane 0/1  
 /ac instance 0/1  
 /ac button 0/1/reset/scale  
