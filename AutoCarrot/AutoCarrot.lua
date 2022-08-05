@@ -315,14 +315,6 @@ local function OnSlash(key, value, ...)
             else
                 AutoCarrot_Print("'swimHelm' = "..( AutoCarrotDB.swimHelm and "1" or "0" ))
             end
-        elseif key == "swimcane" then
-            if tonumber(value) then
-                local enable = tonumber(value) == 1 and true or false
-                AutoCarrotDB.swimCane = enable
-                AutoCarrot_Print("'swimCane' set: "..( enable and "1" or "0" ))
-            else
-                AutoCarrot_Print("'swimCane' = "..( AutoCarrotDB.swimCane and "1" or "0" ))
-            end
         elseif key == "instance" then
             if tonumber(value) then
                 local enable = tonumber(value) == 1 and true or false
@@ -364,7 +356,6 @@ local function OnSlash(key, value, ...)
         AutoCarrot_Print(" - mithrilSpurs 0/1 ("..(AutoCarrotDB.mithrilSpurs and "1" or "0")..")")
         AutoCarrot_Print(" - swimBelt 0/1 ("..(AutoCarrotDB.swimBelt and "1" or "0")..")")
         AutoCarrot_Print(" - swimHelm 0/1 ("..(AutoCarrotDB.swimHelm and "1" or "0")..")")
-        AutoCarrot_Print(" - swimCane 0/1 ("..(AutoCarrotDB.swimCane and "1" or "0")..")")
         AutoCarrot_Print(" - instance 0/1 ("..(AutoCarrotDB.instance and "1" or "0")..")")
         AutoCarrot_Print(" - button 0/1/reset/scale ("..(AutoCarrotDB.button and "1" or "0")..")")
     end
