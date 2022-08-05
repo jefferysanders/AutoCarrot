@@ -2,7 +2,7 @@
 
 Equips Carrot on a Stick automatically when mounted
 
-Works with both Classic / TBC
+Works with Classic / TBC / WOTLK
 
 UPDATE: 
 - Now also supports gloves with Riding enchant and boots with Mithril Spurs.
@@ -15,6 +15,11 @@ UPDATE:
 - Now works with both trinket slot 1/2, just move the carrot/crop to whichever slot you want
 - Fix bug where items weren't swapped properly on some occasions (for example after entering instances/accepting summon)
 
+2022-08-06 v3.0:
+- WOTLK Update (disable carrot/crop on level 70+)
+- Add Hydrocane for auto breath regen
+- Add option to auto disable on instances/raids/battlegrounds/arenas
+
 Usage:  
 
 /ac enabled 0/1/toggle  
@@ -22,4 +27,6 @@ Usage:
 /ac mithrilSpurs 0/1  
 /ac swimBelt 0/1  
 /ac swimHelm 0/1  
+/ac swimCane 0/1  
+/ac instance 0/1  
 /ac button 0/1/reset/scale  
