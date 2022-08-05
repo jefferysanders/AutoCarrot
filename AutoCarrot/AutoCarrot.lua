@@ -1,10 +1,10 @@
 if not AutoCarrotDB then
-    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, button = false, buttonScale = 1.0, trinketSlot1 = false, instance = false }
+    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, swimCane = true, button = false, buttonScale = 1.0, trinketSlot1 = false, instance = false }
 end
 
 local CROP_OR_CARROT_ID = nil
 local hasEnteredWorld = false
-
+local caneRegen = false
 local f = CreateFrame("Frame")
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
 f:RegisterEvent('PLAYER_LEAVING_WORLD')
@@ -12,100 +12,143 @@ f:RegisterEvent('BAG_UPDATE')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_EQUIPMENT_CHANGED')
 f:SetScript("OnUpdate", function()
-    if(not hasEnteredWorld or not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
-    if(IsMounted() and not UnitOnTaxi("player")) then
-        local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
-        if(itemId) then
-            if(itemId ~= 25653 and itemId ~= 11122 and itemId ~= 32863) then
-                AutoCarrotDB.trinketId = itemId
+    if(not hasEnteredWorld or not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or UnitIsDeadOrGhost("player")) then return end
+    if(AutoCarrotDB.swimCane) then
+        local timer = 0
+        if(IsSubmerged() and not InCombatLockdown()) then timer = GetMirrorTimerProgress("BREATH") end
+        if(timer > 0 and (timer < 30000 or caneRegen)) then
+            caneRegen = true
+            local itemId = GetInventoryItemID("player", 16) -- mainhand
+            if(itemId) then
+                if(itemId ~= 9452) then
+                    AutoCarrotDB.mainHandId = itemId
+                    AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
+                    EquipItemByName(9452, 16)
+                end
+            else
+                AutoCarrotDB.mainHandId = nil
+                AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
+                EquipItemByName(9452, 16)
+            end
+        else
+            caneRegen = false
+            local itemId = GetInventoryItemID("player", 16) -- mainhand
+            if(itemId) then
+                if(itemId ~= 9452) then
+                    AutoCarrotDB.mainHandId = itemId
+                    AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
+                else
+                    if(AutoCarrotDB.mainHandId) then
+                        EquipItemByName(AutoCarrotDB.mainHandId, 16)
+                    end
+                    if(AutoCarrotDB.offHandId) then
+                        EquipItemByName(AutoCarrotDB.offHandId, 17)
+                    end
+                end
+            else
+                AutoCarrotDB.mainHandId = nil
+                AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
+            end    
+        end
+    end
+    if(InCombatLockdown()) then return end
+    if(UnitLevel("player") <= 70) then
+        if(IsMounted() and not UnitOnTaxi("player")) then
+            local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
+            if(itemId) then
+                if(itemId ~= 25653 and itemId ~= 11122 and itemId ~= 32863) then
+                    AutoCarrotDB.trinketId = itemId
+                    if(CROP_OR_CARROT_ID and not StaticPopup1:IsShown()) then
+                        EquipItemByName(CROP_OR_CARROT_ID, AutoCarrotDB.trinketSlot1 and 13 or 14)
+                    end
+                end
+            else
+                AutoCarrotDB.trinketId = nil
                 if(CROP_OR_CARROT_ID and not StaticPopup1:IsShown()) then
                     EquipItemByName(CROP_OR_CARROT_ID, AutoCarrotDB.trinketSlot1 and 13 or 14)
                 end
             end
-        else
-            AutoCarrotDB.trinketId = nil
-            if(CROP_OR_CARROT_ID and not StaticPopup1:IsShown()) then
-                EquipItemByName(CROP_OR_CARROT_ID, AutoCarrotDB.trinketSlot1 and 13 or 14)
-            end
-        end
-        if(AutoCarrotDB.ridingGloves and AutoCarrotDB.enchantHandsLink) then
-            itemLink = GetInventoryItemLink("player", 10) -- hands
-            if(itemLink) then
-                local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
-                if(enchantId ~= "930") then
-                    AutoCarrotDB.handsLink = "item:"..itemId..":"..enchantId..":"
+            if(AutoCarrotDB.ridingGloves and AutoCarrotDB.enchantHandsLink) then
+                itemLink = GetInventoryItemLink("player", 10) -- hands
+                if(itemLink) then
+                    local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
+                    if(enchantId ~= "930") then
+                        AutoCarrotDB.handsLink = "item:"..itemId..":"..enchantId..":"
+                        if(not StaticPopup1:IsShown()) then
+                            EquipItemByName(AutoCarrotDB.enchantHandsLink, 10)
+                        end
+                    end
+                else
+                    AutoCarrotDB.handsLink = nil
                     if(not StaticPopup1:IsShown()) then
                         EquipItemByName(AutoCarrotDB.enchantHandsLink, 10)
                     end
                 end
-            else
-                AutoCarrotDB.handsLink = nil
-                if(not StaticPopup1:IsShown()) then
-                    EquipItemByName(AutoCarrotDB.enchantHandsLink, 10)
-                end
             end
-        end
-        if(AutoCarrotDB.mithrilSpurs and AutoCarrotDB.enchantBootsLink) then    
-            itemLink = GetInventoryItemLink("player", 8) -- feet
-            if(itemLink) then
-                local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
-                if(enchantId ~= "464") then
-                    AutoCarrotDB.bootsLink = "item:"..itemId..":"..enchantId..":"
+            if(AutoCarrotDB.mithrilSpurs and AutoCarrotDB.enchantBootsLink) then    
+                itemLink = GetInventoryItemLink("player", 8) -- feet
+                if(itemLink) then
+                    local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
+                    if(enchantId ~= "464") then
+                        AutoCarrotDB.bootsLink = "item:"..itemId..":"..enchantId..":"
+                        if(not StaticPopup1:IsShown()) then
+                            EquipItemByName(AutoCarrotDB.enchantBootsLink, 8)
+                        end
+                    end
+                else
+                    AutoCarrotDB.bootsLink = nil
                     if(not StaticPopup1:IsShown()) then
                         EquipItemByName(AutoCarrotDB.enchantBootsLink, 8)
                     end
                 end
-            else
-                AutoCarrotDB.bootsLink = nil
-                if(not StaticPopup1:IsShown()) then
-                    EquipItemByName(AutoCarrotDB.enchantBootsLink, 8)
-                end
-            end
-        end
-    else
-        local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
-        if(itemId) then
-            if(itemId ~= 25653 and itemId ~= 11122 and itemId ~= 32863) then
-                AutoCarrotDB.trinketId = itemId
-            elseif(AutoCarrotDB.trinketId and AutoCarrotDB.trinketId ~= GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 14 or 13)) then
-                EquipItemByName(AutoCarrotDB.trinketId, AutoCarrotDB.trinketSlot1 and 13 or 14)
             end
         else
-            AutoCarrotDB.trinketId = nil
-        end
-        if(AutoCarrotDB.ridingGloves and AutoCarrotDB.enchantHandsLink) then
-            itemLink = GetInventoryItemLink("player", 10) -- hands
-            if(itemLink) then
-                local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
-                if(enchantId ~= "930") then
-                    AutoCarrotDB.handsLink = "item:"..itemId..":"..enchantId..":"
-                elseif(AutoCarrotDB.handsLink) then
-                    EquipItemByName(AutoCarrotDB.handsLink, 10)
+            local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
+            if(itemId) then
+                if(itemId ~= 25653 and itemId ~= 11122 and itemId ~= 32863) then
+                    AutoCarrotDB.trinketId = itemId
+                elseif(AutoCarrotDB.trinketId and AutoCarrotDB.trinketId ~= GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 14 or 13)) then
+                    EquipItemByName(AutoCarrotDB.trinketId, AutoCarrotDB.trinketSlot1 and 13 or 14)
                 end
             else
-                AutoCarrotDB.handsLink = nil
+                AutoCarrotDB.trinketId = nil
             end
-        end
-        if(AutoCarrotDB.mithrilSpurs and AutoCarrotDB.enchantBootsLink) then 
-            itemLink = GetInventoryItemLink("player", 8) -- feet
-            if(itemLink) then
-                local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
-                if(enchantId ~= "464") then
-                    AutoCarrotDB.bootsLink = "item:"..itemId..":"..enchantId..":"
-                elseif(AutoCarrotDB.bootsLink) then
-                    EquipItemByName(AutoCarrotDB.bootsLink, 8)
+            if(AutoCarrotDB.ridingGloves and AutoCarrotDB.enchantHandsLink) then
+                itemLink = GetInventoryItemLink("player", 10) -- hands
+                if(itemLink) then
+                    local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
+                    if(enchantId ~= "930") then
+                        AutoCarrotDB.handsLink = "item:"..itemId..":"..enchantId..":"
+                    elseif(AutoCarrotDB.handsLink) then
+                        EquipItemByName(AutoCarrotDB.handsLink, 10)
+                    end
+                else
+                    AutoCarrotDB.handsLink = nil
                 end
-            else
-                AutoCarrotDB.bootsLink = nil
             end
-        end    
+            if(AutoCarrotDB.mithrilSpurs and AutoCarrotDB.enchantBootsLink) then 
+                itemLink = GetInventoryItemLink("player", 8) -- feet
+                if(itemLink) then
+                    local itemId, enchantId = itemLink:match("item:(%d+):(%d*)")
+                    if(enchantId ~= "464") then
+                        AutoCarrotDB.bootsLink = "item:"..itemId..":"..enchantId..":"
+                    elseif(AutoCarrotDB.bootsLink) then
+                        EquipItemByName(AutoCarrotDB.bootsLink, 8)
+                    end
+                else
+                    AutoCarrotDB.bootsLink = nil
+                end
+            end    
+        end
     end
     if(IsSwimming() and AutoCarrotDB.swimBelt) then
         local itemId = GetInventoryItemID("player", 6) -- waist
         if(itemId) then
             if(itemId ~= 7052) then
                 AutoCarrotDB.beltId = itemId
-                EquipItemByName(7052, 6)
+                if(not StaticPopup1:IsShown()) then
+                    EquipItemByName(7052, 6)
+                end
             end
         else
             AutoCarrotDB.beltId = nil
@@ -118,7 +161,7 @@ f:SetScript("OnUpdate", function()
         if(itemId) then
             if(itemId ~= 7052) then
                 AutoCarrotDB.beltId = itemId
-            elseif(AutoCarrotDB.beltId and not StaticPopup1:IsShown()) then
+            elseif(AutoCarrotDB.beltId) then
                 EquipItemByName(AutoCarrotDB.beltId, 6)
             end
         else
@@ -128,9 +171,11 @@ f:SetScript("OnUpdate", function()
     if(IsSubmerged() and AutoCarrotDB.swimHelm) then
         local itemId = GetInventoryItemID("player", 1) -- head
         if(itemId) then
-            if(itemId ~= 10506 and not StaticPopup1:IsShown()) then
+            if(itemId ~= 10506) then
                 AutoCarrotDB.headId = itemId
-                EquipItemByName(10506, 1)
+                if(not StaticPopup1:IsShown()) then
+                    EquipItemByName(10506, 1)
+                end
             end
         else
             AutoCarrotDB.headId = nil
@@ -310,10 +355,18 @@ local function OnSlash(key, value, ...)
             else
                 AutoCarrot_Print("'swimHelm' = "..( AutoCarrotDB.swimHelm and "1" or "0" ))
             end
+        elseif key == "swimcane" then
+            if tonumber(value) then
+                local enable = tonumber(value) == 1 and true or false
+                AutoCarrotDB.swimCane = enable
+                AutoCarrot_Print("'swimCane' set: "..( enable and "1" or "0" ))
+            else
+                AutoCarrot_Print("'swimCane' = "..( AutoCarrotDB.swimCane and "1" or "0" ))
+            end
         elseif key == "instance" then
             if tonumber(value) then
                 local enable = tonumber(value) == 1 and true or false
-                AutoCarrotDB.swimHelm = enable
+                AutoCarrotDB.instance = enable
                 AutoCarrot_Print("'instance' set: "..( enable and "1" or "0" ))
             else
                 AutoCarrot_Print("'instance' = "..( AutoCarrotDB.instance and "1" or "0" ))
@@ -351,6 +404,7 @@ local function OnSlash(key, value, ...)
         AutoCarrot_Print(" - mithrilSpurs 0/1 ("..(AutoCarrotDB.mithrilSpurs and "1" or "0")..")")
         AutoCarrot_Print(" - swimBelt 0/1 ("..(AutoCarrotDB.swimBelt and "1" or "0")..")")
         AutoCarrot_Print(" - swimHelm 0/1 ("..(AutoCarrotDB.swimHelm and "1" or "0")..")")
+        AutoCarrot_Print(" - swimCane 0/1 ("..(AutoCarrotDB.swimCane and "1" or "0")..")")
         AutoCarrot_Print(" - instance 0/1 ("..(AutoCarrotDB.instance and "1" or "0")..")")
         AutoCarrot_Print(" - button 0/1/reset/scale ("..(AutoCarrotDB.button and "1" or "0")..")")
     end
