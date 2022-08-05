@@ -1,10 +1,9 @@
 if not AutoCarrotDB then
-    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, swimCane = true, button = false, buttonScale = 1.0, trinketSlot1 = false, instance = false }
+    AutoCarrotDB = { enabled = true, ridingGloves = true, mithrilSpurs = true, swimBelt = true, swimHelm = true, button = false, buttonScale = 1.0, trinketSlot1 = false, instance = false }
 end
 
 local CROP_OR_CARROT_ID = nil
 local hasEnteredWorld = false
-local caneRegen = false
 local f = CreateFrame("Frame")
 f:RegisterEvent('PLAYER_ENTERING_WORLD')
 f:RegisterEvent('PLAYER_LEAVING_WORLD')
@@ -12,46 +11,7 @@ f:RegisterEvent('BAG_UPDATE')
 f:RegisterEvent('ADDON_LOADED')
 f:RegisterEvent('PLAYER_EQUIPMENT_CHANGED')
 f:SetScript("OnUpdate", function()
-    if(not hasEnteredWorld or not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or UnitIsDeadOrGhost("player")) then return end
-    if(AutoCarrotDB.swimCane) then
-        local timer = 0
-        if(IsSubmerged() and not InCombatLockdown()) then timer = GetMirrorTimerProgress("BREATH") end
-        if(timer > 0 and (timer < 30000 or caneRegen)) then
-            caneRegen = true
-            local itemId = GetInventoryItemID("player", 16) -- mainhand
-            if(itemId) then
-                if(itemId ~= 9452) then
-                    AutoCarrotDB.mainHandId = itemId
-                    AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
-                    EquipItemByName(9452, 16)
-                end
-            else
-                AutoCarrotDB.mainHandId = nil
-                AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
-                EquipItemByName(9452, 16)
-            end
-        else
-            caneRegen = false
-            local itemId = GetInventoryItemID("player", 16) -- mainhand
-            if(itemId) then
-                if(itemId ~= 9452) then
-                    AutoCarrotDB.mainHandId = itemId
-                    AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
-                else
-                    if(AutoCarrotDB.mainHandId) then
-                        EquipItemByName(AutoCarrotDB.mainHandId, 16)
-                    end
-                    if(AutoCarrotDB.offHandId) then
-                        EquipItemByName(AutoCarrotDB.offHandId, 17)
-                    end
-                end
-            else
-                AutoCarrotDB.mainHandId = nil
-                AutoCarrotDB.offHandId = GetInventoryItemID("player", 17)
-            end    
-        end
-    end
-    if(InCombatLockdown()) then return end
+    if(not hasEnteredWorld or not UnitExists("player") or not UnitIsConnected("player") or not AutoCarrotDB.enabled or InCombatLockdown() or UnitIsDeadOrGhost("player")) then return end
     if(UnitLevel("player") <= 70) then
         if(IsMounted() and not UnitOnTaxi("player")) then
             local itemId = GetInventoryItemID("player", AutoCarrotDB.trinketSlot1 and 13 or 14) -- trinket slot 1/2
