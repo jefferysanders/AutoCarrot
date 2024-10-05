@@ -20,8 +20,7 @@ UPDATE:
 - Add option to auto disable on instances/raids/battlegrounds/arenas
 
 2024-08-06
--Small update to fix LUA errors causes by 11504 patch.
-
+- Small update to fix LUA errors causes by 11504 patch.
 Usage:  
 
 /ac enabled 0/1/toggle  
